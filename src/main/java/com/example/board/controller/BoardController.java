@@ -2,7 +2,6 @@ package com.example.board.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,11 +9,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.data.domain.Sort;
 import java.util.Optional;
 
 import com.example.board.repository.Post;
 import com.example.board.repository.PostFactory;
 import com.example.board.repository.PostRepository;
+import com.example.board.validation.*;
 
 /**
  * 掲示板のフロントコントローラー.
@@ -34,7 +35,7 @@ public class BoardController {
 	}
 
 	private Model setList(Model model) {
-		Iterable<Post> list = repository.findAll();
+		Iterable<Post> list = repository.findByDeletedFalseOrderByUpdatedDateDesc();
 		model.addAttribute("list", list);
 		return model;
 	}
@@ -73,7 +74,8 @@ public class BoardController {
 	 * @return テンプレート
 	 */
 	@RequestMapping(value = "/update", method = RequestMethod.POST)
-	public String update(@ModelAttribute("form") Post form, Model model) {
+	public String update(@ModelAttribute("form") @Validated(GroupOrder.class) Post form, BindingResult result,
+			Model model) {
 		Optional<Post> post = repository.findById(form.getId());
 		repository.saveAndFlush(PostFactory.updatePost(post.get(), form));
 		model.addAttribute("form", PostFactory.newPost());
